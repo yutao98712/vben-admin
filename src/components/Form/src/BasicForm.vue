@@ -288,6 +288,7 @@
         validate,
         submit: handleSubmit,
         scrollToField: scrollToField,
+        getFormModel: () => formModel,
       };
 
       onMounted(() => {

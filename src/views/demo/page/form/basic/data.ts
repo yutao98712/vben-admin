@@ -1,7 +1,7 @@
-import { FormSchema } from '/@/components/Form';
-import 'reflect-metadata';
-
+import { FormSchema, useForm } from '/@/components/Form';
 import type { UseFormReturnType } from '/@/components/Form/src/types/form';
+
+import 'reflect-metadata';
 
 function FormField(config: FormSchema): MethodDecorator {
   return (target: any, methodIdentifier) => {
@@ -21,18 +21,50 @@ const colProps = {
 };
 export class Service {
   public form: Nullable<UseFormReturnType> = null;
+  public formModel = null as any;
   @FormField({
     field: '',
     component: 'Input',
     label: '标题',
     colProps,
-    componentProps: {
+    componentProps: () => ({
       placeholder: '给目标起个名字',
-    },
+    }),
     required: true,
   })
-  get name() {
+  get name(): string {
+    if (this.formModel) {
+      return this.formModel.name;
+    }
     return '';
+  }
+  set name(val: string) {
+    if (this.form) {
+      this.form[1].setFieldsValue({
+        name: val,
+      });
+    }
+  }
+  initForm() {
+    const form = useForm({
+      labelCol: {
+        span: 8,
+      },
+      wrapperCol: {
+        span: 15,
+      },
+      schemas: Reflect.getMetadata('class:field', this),
+      actionColOptions: {
+        offset: 8,
+        span: 23,
+      },
+      submitButtonOptions: {
+        text: '提交',
+      },
+      submitFunc: this.submit.bind(this),
+    });
+    this.form = form;
+    return form;
   }
   // time?: string = undefined;
   // client?: string = undefined;
@@ -42,10 +74,29 @@ export class Service {
   // inviter?: string = undefined;
   // disclosure?: number = undefined;
   // disclosurePeople: number[] = [];
-  getSchema(): FormSchema[] {
-    return Reflect.getMetadata('class:field', this);
+  async submit() {
+    if (this.form) {
+      const { validate, setProps } = this.form[1]!;
+      try {
+        await validate();
+        setProps({
+          submitButtonOptions: {
+            loading: true,
+          },
+        });
+        setTimeout(() => {
+          setProps({
+            submitButtonOptions: {
+              loading: false,
+            },
+          });
+          // createMessage.success('提交成功！');
+        }, 2000);
+      } catch (error) {
+        // error
+      }
+    }
   }
-  async submit() {}
 }
 
 // export const schemas: FormSchema[] = [

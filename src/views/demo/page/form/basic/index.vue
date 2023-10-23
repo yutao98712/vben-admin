@@ -6,66 +6,27 @@
     contentClass="p-4"
   >
     <BasicForm @register="register" />
-    <div>{{ service.title }}</div>
+    <span>{{ service.name }}</span>
+    <a-button @click="setField">hello</a-button>
   </PageWrapper>
 </template>
-<script lang="ts">
-  import { BasicForm, useForm } from '/@/components/Form';
-  import { defineComponent, ref } from 'vue';
+<script lang="ts" setup>
+  import { BasicForm } from '/@/components/Form';
+  import { ref, onMounted } from 'vue';
   import { Service } from './data';
-  import { useMessage } from '/@/hooks/web/useMessage';
+  // import { useMessage } from '/@/hooks/web/useMessage';
   import { PageWrapper } from '/@/components/Page';
 
-  export default defineComponent({
-    name: 'FormBasicPage',
-    components: { BasicForm, PageWrapper },
-    setup() {
-      const service = ref(new Service());
-      const schemas = service.value.getSchema();
-      const { createMessage } = useMessage();
-      const [register, { validate, setProps, getFieldsValue }] = useForm({
-        labelCol: {
-          span: 8,
-        },
-        wrapperCol: {
-          span: 15,
-        },
-        schemas: schemas,
-        actionColOptions: {
-          offset: 8,
-          span: 23,
-        },
-        submitButtonOptions: {
-          text: '提交',
-        },
-        submitFunc: customSubmitFunc,
-      });
-
-      async function customSubmitFunc() {
-        try {
-          await validate();
-          console.log(getFieldsValue());
-          setProps({
-            submitButtonOptions: {
-              loading: true,
-            },
-          });
-          setTimeout(() => {
-            setProps({
-              submitButtonOptions: {
-                loading: false,
-              },
-            });
-            createMessage.success('提交成功！');
-          }, 2000);
-        } catch (error) {
-          // error
-        }
-      }
-
-      return { register, service };
-    },
+  const service = ref(new Service());
+  const [register, { getFormModel }] = service.value.initForm();
+  onMounted(async () => {
+    service.value.formModel = await getFormModel();
+    service.value.name = '123';
+    console.log(service.value.name);
   });
+  function setField() {
+    service.value.name = '456';
+  }
 </script>
 <style lang="less" scoped>
   .form-wrap {
